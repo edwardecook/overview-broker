@@ -14,6 +14,7 @@ config:
   apiVersion: 2.14
   user: admin
   password: password
+  correctToken: ""
 
   provisionParameters:
     d2d814079edfd33f74b3b454fb666625:

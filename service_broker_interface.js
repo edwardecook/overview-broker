@@ -70,7 +70,7 @@ class ServiceBrokerInterface {
                 var service = this.serviceBroker.getService(request.body.service_id);
                 var plan = this.serviceBroker.getPlanForService(request.body.service_id, request.body.plan_id);
                 if (!plan) {
-                    this.sendResponse(response, 400, `Could not find service ${request.body.service_id}, plan ${request.body.plan_id}`);
+                    this.sendJSONResponse(response, 400, { error: 'Could not find service ${request.body.service_id}, plan ${request.body.plan_id}' } );
                     return;
                 }
 
@@ -109,8 +109,15 @@ class ServiceBrokerInterface {
 
                 // Check if the instance already exists
                 if (serviceInstanceId in this.serviceInstances) {
-                    this.sendJSONResponse(response, 200, data);
-                    return;
+                    // check if posted space_guid = current space_guid
+                    if (this.serviceInstances[serviceInstanceId] &&
+                        this.serviceInstances[serviceInstanceId].space_guid == request.body.space_guid) {
+                        this.sendJSONResponse(response, 200, data);
+                        return;
+                    } else {
+                        this.sendJSONResponse(response, 409, data);
+                        return;
+                    }
                 }
 
                 this.serviceInstances[serviceInstanceId] = {
@@ -423,8 +430,14 @@ class ServiceBrokerInterface {
 
                 // Check if the binding already exists
                 if (serviceInstanceId in this.serviceInstances && bindingId in this.serviceInstances[serviceInstanceId].bindings) {
-                    this.sendJSONResponse(response, 200, data);
-                    return;
+                    if (this.serviceInstances[serviceInstanceId].service_id == request.body.service_id &&
+                        this.serviceInstances[serviceInstanceId].plan_id == request.body.plan_id) {
+                        this.sendJSONResponse(response, 200, data);
+                        return;
+                    } else {
+                        this.sendJSONResponse(response, 409, data);
+                        return;
+                    }
                 }
 
                 // Save the binding to memory
